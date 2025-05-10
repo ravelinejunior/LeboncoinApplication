@@ -18,7 +18,7 @@ class AlbumRepository @Inject constructor(
             dao.insertAll(entities)
             entities
         } catch (e: Exception) {
-            dao.getAll() // fallback offline
+            dao.getAll()
         }
     }
 

@@ -18,6 +18,7 @@ dagger-compiler = "2.51.1"
 hilt-android = "2.51.1"
 hilt-navigation-compose = "1.2.0"
 retrofitVersion = "2.9.0"
+okHttpVersion = "4.12.0"
 
 
 [libraries]
@@ -52,6 +53,7 @@ hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "dag
 
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofitVersion" }
 retrofit_converter_gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofitVersion" }
+retrofit_interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okHttpVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

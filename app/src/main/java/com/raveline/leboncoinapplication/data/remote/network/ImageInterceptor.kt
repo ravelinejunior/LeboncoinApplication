@@ -9,6 +9,10 @@ class ImageInterceptor : Interceptor {
         val newRequest = original.newBuilder()
             .header("User-Agent", "LeboncoinApp/1.0")
             .build()
-        return chain.proceed(newRequest)
+        val response = chain.proceed(newRequest)
+        println("Request: ${newRequest.url}, Method: ${newRequest.method}, Headers: ${newRequest.headers}")
+        println("Response: ${response.code}, Message: ${response.message}, Headers: ${response.headers}")
+
+        return response
     }
 }
