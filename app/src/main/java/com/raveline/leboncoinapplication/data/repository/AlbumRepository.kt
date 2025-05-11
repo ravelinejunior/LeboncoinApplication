@@ -13,10 +13,13 @@ class AlbumRepository @Inject constructor(
 
     suspend fun getAlbums(): List<AlbumEntity> {
         return try {
-            val remote = api.getAlbums()
-            val entities = remote.map { it.toEntity() }
-            dao.insertAll(entities)
-            entities
+            val localData = dao.getAll()
+            localData.ifEmpty {
+                val remote = api.getAlbums()
+                val entities = remote.map { it.toEntity() }
+                dao.insertAll(entities)
+                entities
+            }
         } catch (e: Exception) {
             dao.getAll()
         }
