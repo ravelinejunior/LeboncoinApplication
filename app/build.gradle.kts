@@ -61,6 +61,8 @@ dependencies {
 
     // ViewModel
     implementation(libs.viewmodel.compose)
+    implementation (libs.kotlinx.coroutines.core)
+    implementation (libs.kotlinx.coroutines.android)
 
     // Navigation
     implementation(libs.navigation.compose)
@@ -69,6 +71,9 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.retrofit.interceptor)
+
+    // Swipe
+    implementation(libs.androidx.foundation)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -80,15 +85,15 @@ dependencies {
     implementation(libs.androidx.material3)
     testImplementation(libs.junit)
 
-    testImplementation("org.mockito:mockito-core:5.0.0")
-    testImplementation("org.mockito:mockito-inline:5.0.0")
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.inline)
     // MockK
-    testImplementation("io.mockk:mockk:1.13.5")
+    testImplementation(libs.mockk)
     // Coroutines
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.kotlinx.coroutines.core)
     // Compose UI Test
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.1")
+    androidTestImplementation(libs.ui.test.junit4)
     // Compose UI Test Manifest
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

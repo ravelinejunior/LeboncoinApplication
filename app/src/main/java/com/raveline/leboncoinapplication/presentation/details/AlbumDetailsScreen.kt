@@ -1,5 +1,7 @@
 package com.raveline.leboncoinapplication.presentation.details
 
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,9 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -41,15 +45,16 @@ fun AlbumDetailScreen(
     onBack: () -> Unit = {}
 ) {
     val album = viewModel.uiState
+    val scrollState = rememberScrollState()
 
     album?.let {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Detalhes do Álbum") },
+                    title = { Text(album.title) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                     }
                 )
@@ -59,7 +64,8 @@ fun AlbumDetailScreen(
                 modifier = Modifier
                     .padding(padding)
                     .padding(16.dp)
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.Top
             ) {
                 AsyncImage(
@@ -80,7 +86,7 @@ fun AlbumDetailScreen(
                     contentScale = ContentScale.Crop
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Título: ${album.title}", style = MaterialTheme.typography.titleMedium)
+                Text("Title: ${album.title}", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("ID: ${album.id}", style = MaterialTheme.typography.bodyMedium)
             }

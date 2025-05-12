@@ -14,8 +14,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.pullToRefresh
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,33 +33,55 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.raveline.leboncoinapplication.data.local.entity.AlbumEntity
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumsScreen(
     viewModel: AlbumsViewModel = hiltViewModel(),
     onAlbumClick: (Int) -> Unit
 ) {
     val state = viewModel.uiState
+    val refreshing = state.isLoading
+    val pullRefreshState = rememberPullToRefreshState()
 
-    when {
-        state.isLoading -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pullToRefresh(
+                state = pullRefreshState,
+                isRefreshing = refreshing,
+                onRefresh = { viewModel.loadAlbums() }
+            )
+    ) {
+        when {
+            refreshing && state.albums.isEmpty() -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
             }
-        }
 
-        state.error != null -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Error: ${state.error}")
+            state.error != null && state.albums.isEmpty() -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(state.error)
+                }
             }
-        }
 
-        else -> {
-            LazyColumn {
-                items(state.albums) { album ->
-                    AlbumItem(album, onClick = { onAlbumClick(album.id) })
+            else -> {
+                LazyColumn {
+                    items(state.albums) { album ->
+                        AlbumItem(album, onClick = { onAlbumClick(album.id) })
+                    }
                 }
             }
         }
+
+        PullToRefreshBox(
+            isRefreshing = refreshing,
+            state = pullRefreshState,
+            onRefresh = { viewModel.loadAlbums() },
+            modifier = Modifier.align(Alignment.TopCenter),
+            content = {},
+
+        )
     }
 }
 
