@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.raveline.leboncoinapplication.domain.use_case.GetAlbumsUseCase
 import com.raveline.leboncoinapplication.utils.NetworkMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -32,6 +33,7 @@ class AlbumsViewModel @Inject constructor(
     internal fun loadAlbums() {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true)
+            delay(500L)
             try {
                 val result = getAlbumsUseCase()
                 uiState = uiState.copy(isLoading = false, albums = result)
@@ -43,7 +45,7 @@ class AlbumsViewModel @Inject constructor(
 
     private fun observeNetwork(context: Context) {
         NetworkMonitor.observe(context).onEach { isConnected ->
-            if (isConnected && uiState.albums.isEmpty()) {
+            if (isConnected) {
                 loadAlbums()
             }
         }.launchIn(viewModelScope)

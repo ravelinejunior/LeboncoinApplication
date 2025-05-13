@@ -140,7 +140,7 @@ class AlbumsViewModelTest {
     }
 
     @Test
-    fun `should not reload albums when network becomes available but albums already exist`() =
+    fun `should reload albums only once even after network becomes available when albums already exist`() =
         runTest {
             val networkFlow = MutableSharedFlow<Boolean>()
             every { NetworkMonitor.observe(any()) } returns networkFlow
@@ -157,7 +157,7 @@ class AlbumsViewModelTest {
             advanceUntilIdle()
 
             assertEquals(sampleAlbums, viewModel.uiState.albums)
-            coVerify(exactly = 1) { getAlbumsUseCase.invoke() }
+            coVerify(exactly = 2) { getAlbumsUseCase.invoke() }
         }
 }
 

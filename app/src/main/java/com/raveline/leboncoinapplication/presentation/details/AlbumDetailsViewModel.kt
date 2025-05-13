@@ -6,31 +6,43 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.raveline.leboncoinapplication.data.local.entity.AlbumEntity
 import com.raveline.leboncoinapplication.data.repository.AlbumRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class AlbumDetailViewModel @Inject constructor(
     private val repository: AlbumRepository,
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    var uiState by mutableStateOf<AlbumEntity?>(null)
+    var uiState by mutableStateOf(AlbumDetailUiState())
         private set
+
+    private var albumId: Int? = null
 
     init {
         val id = savedStateHandle.get<String>("albumId")?.toIntOrNull()
-        id?.let {
-            loadAlbum(it)
+        albumId = id
+        if (id != null) {
+            loadAlbum(id)
+        } else {
+            uiState = uiState.copy(error = "Unknown error", isLoading = false)
         }
     }
 
     private fun loadAlbum(id: Int) {
         viewModelScope.launch {
-            uiState = repository.getAlbumById(id)
+            uiState = uiState.copy(isLoading = true, error = null)
+            delay(500L)
+            try {
+                val album = repository.getAlbumById(id)
+                uiState = uiState.copy(album = album, isLoading = false)
+            } catch (e: Exception) {
+                uiState = uiState.copy(error = e.message ?: "Unknown error", isLoading = false)
+            }
         }
     }
 }
