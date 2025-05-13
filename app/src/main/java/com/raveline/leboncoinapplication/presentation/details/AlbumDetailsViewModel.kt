@@ -36,7 +36,7 @@ class AlbumDetailViewModel @Inject constructor(
     private fun loadAlbum(id: Int) {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true, error = null)
-            delay(500L)
+            delay(200L)
             try {
                 val album = repository.getAlbumById(id)
                 uiState = uiState.copy(album = album, isLoading = false)
