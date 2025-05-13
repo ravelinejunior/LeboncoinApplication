@@ -28,23 +28,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.raveline.leboncoinapplication.R
+import com.raveline.leboncoinapplication.data.local.entity.AlbumEntity
+import com.raveline.leboncoinapplication.ui.theme.LeboncoinApplicationTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumDetailScreen(
-    albumId: Int,
-    viewModel: AlbumDetailViewModel = hiltViewModel(),
+    state: AlbumDetailUiState,
     onBack: () -> Unit = {}
 ) {
-    val state = viewModel.uiState
     val scrollState = rememberScrollState()
 
     when {
@@ -65,7 +68,16 @@ fun AlbumDetailScreen(
             Scaffold(
                 topBar = {
                     TopAppBar(
-                        title = { Text(album.title) },
+                        title = {
+                            Text(
+                                album.title, style = MaterialTheme.typography.titleSmall.copy(
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
                         navigationIcon = {
                             IconButton(onClick = onBack) {
                                 Icon(
@@ -110,5 +122,23 @@ fun AlbumDetailScreen(
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun AlbumDetailScreenPreview() {
+    LeboncoinApplicationTheme {
+        AlbumDetailScreen(
+            state = AlbumDetailUiState(
+                album = AlbumEntity(
+                    id = 1,
+                    albumId = 1,
+                    title = "Album 1",
+                    thumbnailUrl = "https://via.placeholder.com/150",
+                    url = "https://via.placeholder.com/150",
+                )
+            )
+        )
     }
 }

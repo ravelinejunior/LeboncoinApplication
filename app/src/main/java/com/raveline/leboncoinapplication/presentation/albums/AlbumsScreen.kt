@@ -1,7 +1,14 @@
-package com.raveline.leboncoinapplication.presentation.albums
-
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,26 +17,38 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.pullToRefresh
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
@@ -37,60 +56,91 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.raveline.leboncoinapplication.R
 import com.raveline.leboncoinapplication.data.local.entity.AlbumEntity
+import com.raveline.leboncoinapplication.presentation.albums.AlbumsViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun AlbumsScreen(
-    viewModel: AlbumsViewModel = hiltViewModel(),
-    onAlbumClick: (Int) -> Unit
+    albums: List<AlbumEntity>,
+    onAlbumClick: (Int) -> Unit,
+    viewModel: AlbumsViewModel
 ) {
-    val state = viewModel.uiState
-    val refreshing = state.isLoading
-    val pullRefreshState = rememberPullToRefreshState()
+    val isGrid = viewModel.isGrid
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .pullToRefresh(
-                state = pullRefreshState,
-                isRefreshing = refreshing,
-                onRefresh = { viewModel.loadAlbums() }
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (isGrid) 180f else 0f,
+        animationSpec = tween(durationMillis = 800)
+    )
+
+    val scale by animateFloatAsState(
+        targetValue = if (isGrid) 1.2f else 1f,
+        animationSpec = tween(durationMillis = 600)
+    )
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Albums",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold
+                        ),
+                    )
+                },
+                actions = {
+
+                    IconButton(
+                        onClick = { viewModel.toggleLayout() },
+                        modifier = Modifier
+                            .size(48.dp)
+                            .rotate(rotationAngle)
+                            .scale(scale)
+                    ) {
+                        Icon(
+                            imageVector = if (isGrid) Icons.AutoMirrored.Filled.List
+                            else Icons.Rounded.MoreVert,
+                            contentDescription = "Change Layout"
+                        )
+                    }
+                }
             )
-    ) {
-        when {
-            refreshing && state.albums.isEmpty() -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+        }
+    ) { padding ->
+        AnimatedContent(
+            targetState = isGrid,
+            transitionSpec = {
+                fadeIn(tween(600)).togetherWith(fadeOut(tween(600)))
+            },
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) { targetIsGrid ->
+            if (targetIsGrid) {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 128.dp),
+                    contentPadding = PaddingValues(8.dp)
+                ) {
+                    items(albums) { album ->
+                        AlbumItem(album = album, isGrid = true) { onAlbumClick(album.id) }
+                    }
                 }
-            }
-
-            state.error != null && state.albums.isEmpty() -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(state.error)
-                }
-            }
-
-            else -> {
-                LazyColumn {
-                    items(state.albums) { album ->
-                        AlbumItem(album, onClick = { onAlbumClick(album.id) })
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(8.dp)
+                ) {
+                    items(albums) { album ->
+                        AlbumItem(album = album, isGrid = false) { onAlbumClick(album.id) }
                     }
                 }
             }
         }
-
-        PullToRefreshBox(
-            isRefreshing = refreshing,
-            state = pullRefreshState,
-            onRefresh = { viewModel.loadAlbums() },
-            modifier = Modifier.align(Alignment.TopCenter),
-            content = {},
-        )
     }
 }
 
 @Composable
-fun AlbumItem(album: AlbumEntity, onClick: () -> Unit) {
+fun AlbumItem(album: AlbumEntity, isGrid: Boolean, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .padding(8.dp)
@@ -99,11 +149,14 @@ fun AlbumItem(album: AlbumEntity, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(4.dp),
         shape = RoundedCornerShape(16.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(12.dp)
+        ) {
             Box(
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(RoundedCornerShape(topStart = 16.dp, bottomStart = 16.dp))
+                    .clip(RoundedCornerShape(12.dp))
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -123,7 +176,26 @@ fun AlbumItem(album: AlbumEntity, onClick: () -> Unit) {
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
-            Text(album.title, style = MaterialTheme.typography.bodyLarge)
+            if (isGrid)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Album #${album.id}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                } else
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(album.title, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = "Album #${album.id}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.Gray,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
         }
     }
 }

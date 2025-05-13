@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.raveline.leboncoinapplication.domain.use_case.GetAlbumsUseCase
@@ -19,8 +20,12 @@ import javax.inject.Inject
 @HiltViewModel
 class AlbumsViewModel @Inject constructor(
     private val getAlbumsUseCase: GetAlbumsUseCase,
+    private val savedStateHandle: SavedStateHandle,
     application: Application
 ) : ViewModel() {
+
+    var isGrid by mutableStateOf(savedStateHandle[KEY_IS_GRID] ?: false)
+        private set
 
     var uiState by mutableStateOf(AlbumsUiState())
         private set
@@ -33,7 +38,7 @@ class AlbumsViewModel @Inject constructor(
     internal fun loadAlbums() {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true)
-            delay(500L)
+            delay(200L)
             try {
                 val result = getAlbumsUseCase()
                 uiState = uiState.copy(isLoading = false, albums = result)
@@ -49,5 +54,14 @@ class AlbumsViewModel @Inject constructor(
                 loadAlbums()
             }
         }.launchIn(viewModelScope)
+    }
+
+    fun toggleLayout() {
+        isGrid = !isGrid
+        savedStateHandle[KEY_IS_GRID] = isGrid
+    }
+
+    companion object {
+        private const val KEY_IS_GRID = "is_grid_layout"
     }
 }
