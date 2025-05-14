@@ -21,7 +21,20 @@ class AlbumRepository @Inject constructor(
                 entities
             }
         } catch (e: Exception) {
+            e.printStackTrace()
             dao.getAll()
+        }
+    }
+
+    suspend fun getAlbumsFromApi(): List<AlbumEntity> {
+        return try {
+            val response = api.getAlbums()
+            val entities = response.map { it.toEntity() }
+            dao.insertAll(entities)
+            entities
+        } catch (e: Exception) {
+            e.printStackTrace()
+            listOf()
         }
     }
 

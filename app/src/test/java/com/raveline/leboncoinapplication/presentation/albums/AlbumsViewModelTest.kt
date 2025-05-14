@@ -19,6 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -33,7 +34,6 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AlbumsViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
     private val getAlbumsUseCase: GetAlbumsUseCase = mockk()
     private val application: Application = mockk()
@@ -47,19 +47,15 @@ class AlbumsViewModelTest {
         url = "url1",
         thumbnailUrl = "thumbnailUrl1"
     )
-
     private val sampleAlbums = listOf(sampleAlbum)
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-
         val connectivityManager: ConnectivityManager = mockk(relaxed = true)
         every { application.getSystemService(Context.CONNECTIVITY_SERVICE) } returns connectivityManager
         every { application.applicationContext } returns application
-
         mockkObject(NetworkMonitor)
-        every { NetworkMonitor.observe(any()) } returns flowOf(true)
     }
 
     @After
@@ -70,88 +66,69 @@ class AlbumsViewModelTest {
 
     @Test
     fun `initial state should be default before loading`() = runTest(testDispatcher) {
+        every { NetworkMonitor.observe(any()) } returns flowOf(true)
         viewModel = AlbumsViewModel(getAlbumsUseCase, savedStateHandle, application)
-        assertEquals(AlbumsUiState(), viewModel.uiState)
-    }
-
-    @Test
-    fun `isLoading should be true at the start of load`() = runTest(testDispatcher) {
-        val networkFlow = MutableSharedFlow<Boolean>()
-        every { NetworkMonitor.observe(any()) } returns networkFlow
-
-        coEvery { getAlbumsUseCase.invoke() } coAnswers {
-            delay(100)
-            emptyList()
-        }
-
-        viewModel = AlbumsViewModel(getAlbumsUseCase, savedStateHandle, application)
-        networkFlow.emit(true)
-        advanceUntilIdle()
-
-        assertFalse(viewModel.uiState.isLoading)
-    }
-
-    @Test
-    fun `should populate albums list when use case returns data`() = runTest(testDispatcher) {
-        coEvery { getAlbumsUseCase.invoke() } returns sampleAlbums
-
-        viewModel = AlbumsViewModel(getAlbumsUseCase, savedStateHandle, application)
-        advanceUntilIdle()
-
-        assertEquals(sampleAlbums, viewModel.uiState.albums)
-        assertFalse(viewModel.uiState.isLoading)
+        assertEquals(false, viewModel.uiState.isLoading)
+        assertTrue(viewModel.uiState.albums.isEmpty())
         assertNull(viewModel.uiState.error)
     }
 
     @Test
-    fun `should set error message when use case throws exception`() = runTest(testDispatcher) {
-        val errorMessage = "Network error"
-        coEvery { getAlbumsUseCase.invoke() } throws RuntimeException(errorMessage)
+    fun `refreshAlbums should load data successfully`() = runTest(testDispatcher) {
+        every { NetworkMonitor.observe(any()) } returns flowOf(true)
+        coEvery { getAlbumsUseCase.invoke(any()) } returns sampleAlbums
 
         viewModel = AlbumsViewModel(getAlbumsUseCase, savedStateHandle, application)
         advanceUntilIdle()
 
-        assertEquals(errorMessage, viewModel.uiState.error)
-        assertTrue(viewModel.uiState.albums.isEmpty())
         assertFalse(viewModel.uiState.isLoading)
+        assertEquals(sampleAlbums, viewModel.uiState.albums)
+        assertNull(viewModel.uiState.error)
     }
 
     @Test
-    fun `should reload albums when network becomes available`() = runTest(testDispatcher) {
-        val networkFlow = MutableSharedFlow<Boolean>()
-        every { NetworkMonitor.observe(any()) } returns networkFlow
-
-        coEvery { getAlbumsUseCase.invoke() } returns emptyList() andThen sampleAlbums
+    fun `refreshAlbums should set error when useCase throws`() = runTest(testDispatcher) {
+        every { NetworkMonitor.observe(any()) } returns flowOf(true)
+        val errorMsg = "Network Error"
+        coEvery { getAlbumsUseCase.invoke(any()) } throws RuntimeException(errorMsg)
 
         viewModel = AlbumsViewModel(getAlbumsUseCase, savedStateHandle, application)
-        networkFlow.emit(false)
         advanceUntilIdle()
 
+        assertFalse(viewModel.uiState.isLoading)
         assertTrue(viewModel.uiState.albums.isEmpty())
+        assertEquals(errorMsg, viewModel.uiState.error)
+    }
 
+    @Test
+    fun `observeNetwork should force refresh when connected`() = runTest(testDispatcher) {
+        val networkFlow = MutableSharedFlow<Boolean>()
+        every { NetworkMonitor.observe(any()) } returns networkFlow
+        coEvery { getAlbumsUseCase.invoke(true) } returns sampleAlbums
+
+        viewModel = AlbumsViewModel(getAlbumsUseCase, savedStateHandle, application)
+        // emit disconnected then connected
+        networkFlow.emit(false)
+        // debounce delay
+        advanceTimeBy(1000)
         networkFlow.emit(true)
         advanceUntilIdle()
 
+        // should have called useCase with forceRefresh = true
+        coVerify { getAlbumsUseCase.invoke(true) }
         assertEquals(sampleAlbums, viewModel.uiState.albums)
     }
 
     @Test
-    fun `should reload albums only once even after network becomes available when albums already exist`() = runTest(testDispatcher) {
-        val networkFlow = MutableSharedFlow<Boolean>()
-        every { NetworkMonitor.observe(any()) } returns networkFlow
-
-        coEvery { getAlbumsUseCase.invoke() } returns sampleAlbums
-
+    fun `toggleLayout should flip grid state and persist`() = runTest(testDispatcher) {
+        every { NetworkMonitor.observe(any()) } returns flowOf(true)
         viewModel = AlbumsViewModel(getAlbumsUseCase, savedStateHandle, application)
-        advanceUntilIdle()
+        // default value
+        assertFalse(viewModel.isGrid)
 
-        assertEquals(sampleAlbums, viewModel.uiState.albums)
-
-        networkFlow.emit(false)
-        networkFlow.emit(true)
-        advanceUntilIdle()
-
-        assertEquals(sampleAlbums, viewModel.uiState.albums)
-        coVerify(exactly = 2) { getAlbumsUseCase.invoke() }
+        viewModel.toggleLayout()
+        assertTrue(viewModel.isGrid)
+        // Should persist in SavedStateHandle
+        assertEquals(true, savedStateHandle.get<Boolean>("is_grid_layout"))
     }
 }

@@ -11,7 +11,9 @@ import androidx.lifecycle.viewModelScope
 import com.raveline.leboncoinapplication.domain.use_case.GetAlbumsUseCase
 import com.raveline.leboncoinapplication.utils.NetworkMonitor
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -32,28 +34,29 @@ class AlbumsViewModel @Inject constructor(
 
     init {
         observeNetwork(application)
-        loadAlbums()
+        refreshAlbums()
     }
 
-    internal fun loadAlbums() {
+    fun refreshAlbums(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true)
-            delay(200L)
             try {
-                val result = getAlbumsUseCase()
-                uiState = uiState.copy(isLoading = false, albums = result)
+                val result = getAlbumsUseCase(forceRefresh)
+                uiState = uiState.copy(isLoading = false, albums = result, error = null)
+                savedStateHandle[KEY_LAST_LOAD_SUCCESS] = System.currentTimeMillis()
             } catch (e: Exception) {
                 uiState = uiState.copy(isLoading = false, error = e.message)
             }
         }
     }
 
+    @OptIn(FlowPreview::class)
     private fun observeNetwork(context: Context) {
-        NetworkMonitor.observe(context).onEach { isConnected ->
-            if (isConnected) {
-                loadAlbums()
-            }
-        }.launchIn(viewModelScope)
+        NetworkMonitor.observe(context)
+            .filter { it }
+            .debounce(1_000)
+            .onEach { refreshAlbums(forceRefresh = true) }
+            .launchIn(viewModelScope)
     }
 
     fun toggleLayout() {
@@ -63,5 +66,6 @@ class AlbumsViewModel @Inject constructor(
 
     companion object {
         private const val KEY_IS_GRID = "is_grid_layout"
+        private const val KEY_LAST_LOAD_SUCCESS = "last_load_success"
     }
 }
