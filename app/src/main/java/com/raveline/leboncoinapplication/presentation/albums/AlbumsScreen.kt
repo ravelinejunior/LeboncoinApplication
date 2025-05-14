@@ -1,3 +1,5 @@
+package com.raveline.leboncoinapplication.presentation.albums
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.animateFloatAsState
@@ -56,7 +58,6 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.raveline.leboncoinapplication.R
 import com.raveline.leboncoinapplication.data.local.entity.AlbumEntity
-import com.raveline.leboncoinapplication.presentation.albums.AlbumsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable

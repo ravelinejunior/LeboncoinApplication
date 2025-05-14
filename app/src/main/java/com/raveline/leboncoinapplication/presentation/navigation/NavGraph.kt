@@ -1,6 +1,6 @@
 package com.raveline.leboncoinapplication.presentation.navigation
 
-import AlbumsScreen
+import com.raveline.leboncoinapplication.presentation.albums.AlbumsScreen
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController

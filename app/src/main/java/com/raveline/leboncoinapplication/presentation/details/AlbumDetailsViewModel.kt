@@ -19,7 +19,6 @@ class AlbumDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     var uiState by mutableStateOf(AlbumDetailUiState())
-        private set
 
     private var albumId: Int? = null
 
