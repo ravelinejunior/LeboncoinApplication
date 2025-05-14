@@ -107,14 +107,11 @@ class AlbumsViewModelTest {
         coEvery { getAlbumsUseCase.invoke(true) } returns sampleAlbums
 
         viewModel = AlbumsViewModel(getAlbumsUseCase, savedStateHandle, application)
-        // emit disconnected then connected
         networkFlow.emit(false)
-        // debounce delay
         advanceTimeBy(1000)
         networkFlow.emit(true)
         advanceUntilIdle()
 
-        // should have called useCase with forceRefresh = true
         coVerify { getAlbumsUseCase.invoke(true) }
         assertEquals(sampleAlbums, viewModel.uiState.albums)
     }
@@ -123,12 +120,10 @@ class AlbumsViewModelTest {
     fun `toggleLayout should flip grid state and persist`() = runTest(testDispatcher) {
         every { NetworkMonitor.observe(any()) } returns flowOf(true)
         viewModel = AlbumsViewModel(getAlbumsUseCase, savedStateHandle, application)
-        // default value
         assertFalse(viewModel.isGrid)
 
         viewModel.toggleLayout()
         assertTrue(viewModel.isGrid)
-        // Should persist in SavedStateHandle
         assertEquals(true, savedStateHandle.get<Boolean>("is_grid_layout"))
     }
 }

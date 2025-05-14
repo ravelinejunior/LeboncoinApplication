@@ -7,6 +7,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,16 +47,17 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
 import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import coil3.request.error
+import coil3.request.placeholder
 import com.raveline.leboncoinapplication.R
 import com.raveline.leboncoinapplication.data.local.entity.AlbumEntity
 
@@ -120,7 +122,7 @@ fun AlbumsScreen(
         ) { targetIsGrid ->
             if (targetIsGrid) {
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 128.dp),
+                    columns = GridCells.Fixed(2),
                     contentPadding = PaddingValues(8.dp)
                 ) {
                     items(albums) { album ->
@@ -142,6 +144,20 @@ fun AlbumsScreen(
 
 @Composable
 fun AlbumItem(album: AlbumEntity, isGrid: Boolean, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val painter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(context)
+            .data(album.thumbnailUrl)
+            .httpHeaders(
+                NetworkHeaders.Builder()
+                    .add("User-Agent", "LeboncoinApp/1.0")
+                    .build()
+            )
+            .crossfade(true)
+            .placeholder(R.drawable.placeholder)
+            .error(R.drawable.error_image)
+            .build()
+    )
     Card(
         modifier = Modifier
             .padding(8.dp)
@@ -159,21 +175,13 @@ fun AlbumItem(album: AlbumEntity, isGrid: Boolean, onClick: () -> Unit) {
                     .size(64.dp)
                     .clip(RoundedCornerShape(12.dp))
             ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(album.thumbnailUrl)
-                        .httpHeaders(
-                            NetworkHeaders
-                                .Builder()
-                                .add("User-Agent", "LeboncoinApp/1.0")
-                                .build()
-                        )
-                        .crossfade(true)
-                        .build(),
+                Image(
+                    painter = painter,
                     contentDescription = null,
-                    error = painterResource(id = R.drawable.error_image),
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(12.dp))
                 )
             }
             Spacer(modifier = Modifier.width(16.dp))
@@ -188,12 +196,16 @@ fun AlbumItem(album: AlbumEntity, isGrid: Boolean, onClick: () -> Unit) {
                     )
                 } else
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(album.title, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        album.title, style = MaterialTheme.typography.titleMedium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                     Text(
                         text = "Album #${album.id}",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.Gray,
-                        maxLines = 3,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
