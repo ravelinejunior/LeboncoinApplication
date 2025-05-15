@@ -2,7 +2,6 @@ package com.raveline.leboncoinapplication.presentation.albums
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -23,7 +22,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -38,7 +39,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,22 +64,13 @@ import com.raveline.leboncoinapplication.data.local.entity.AlbumEntity
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun AlbumsScreen(
-    albums: List<AlbumEntity>,
-    onAlbumClick: (Int) -> Unit,
-    viewModel: AlbumsViewModel
+    uiState: AlbumsUiState,
+    isGrid: Boolean,
+    onToggleLayout: () -> Unit,
+    onAlbumClick: (Int) -> Unit
 ) {
-    val isGrid = viewModel.isGrid
-
-    val rotationAngle by animateFloatAsState(
-        targetValue = if (isGrid) 180f else 0f,
-        animationSpec = tween(durationMillis = 800)
-    )
-
-    val scale by animateFloatAsState(
-        targetValue = if (isGrid) 1.2f else 1f,
-        animationSpec = tween(durationMillis = 600)
-    )
-
+    val listState = rememberLazyListState()
+    val listGridState = rememberLazyGridState()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -93,13 +84,12 @@ fun AlbumsScreen(
                     )
                 },
                 actions = {
-
                     IconButton(
-                        onClick = { viewModel.toggleLayout() },
+                        onClick = onToggleLayout,
                         modifier = Modifier
                             .size(48.dp)
-                            .rotate(rotationAngle)
-                            .scale(scale)
+                            .rotate(if (isGrid) 180f else 0f)
+                            .scale(if (isGrid) 1.2f else 1f)
                     ) {
                         Icon(
                             imageVector = if (isGrid) Icons.AutoMirrored.Filled.List
@@ -123,17 +113,25 @@ fun AlbumsScreen(
             if (targetIsGrid) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(8.dp)
+                    contentPadding = PaddingValues(8.dp),
+                    state = listGridState
                 ) {
-                    items(albums) { album ->
+                    items(
+                        uiState.albums,
+                        key = { it.id },
+                    ) { album ->
                         AlbumItem(album = album, isGrid = true) { onAlbumClick(album.id) }
                     }
                 }
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(8.dp)
+                    contentPadding = PaddingValues(8.dp),
+                    state = listState
                 ) {
-                    items(albums) { album ->
+                    items(
+                        uiState.albums,
+                        key = { it.id },
+                    ) { album ->
                         AlbumItem(album = album, isGrid = false) { onAlbumClick(album.id) }
                     }
                 }
@@ -141,6 +139,7 @@ fun AlbumsScreen(
         }
     }
 }
+
 
 @Composable
 fun AlbumItem(album: AlbumEntity, isGrid: Boolean, onClick: () -> Unit) {
