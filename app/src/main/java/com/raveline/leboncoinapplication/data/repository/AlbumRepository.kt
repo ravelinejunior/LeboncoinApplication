@@ -38,5 +38,10 @@ open class AlbumRepository @Inject constructor(
         }
     }
 
-    suspend fun getAlbumById(id: Int): AlbumEntity? = dao.getAll().find { it.id == id }
+    suspend fun getAlbumById(id: Int): AlbumEntity? = try {
+        dao.getAlbumById(id)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
 }

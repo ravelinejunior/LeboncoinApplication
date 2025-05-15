@@ -24,6 +24,13 @@ class AlbumRepositoryTest {
     private lateinit var mockDao: AlbumDao
     private lateinit var repository: AlbumRepository
 
+    private val exampleAlbum = AlbumEntity(1, 1, "Album 1", "url1", "thumb1")
+    private val example2 = AlbumEntity(2, 2, "Album 2", "url2", "thumb2")
+
+    private val dtoExample = AlbumDto(1, 1, "Album 1", "url1", "thumb1")
+    private val dtoExample2 = AlbumDto(2, 2, "Album 2", "url2", "thumb2")
+    private val listOfDtoAlbums = listOf(dtoExample, dtoExample2)
+
     @BeforeTest
     fun setUp() {
         mockApi = mockk()
@@ -33,7 +40,7 @@ class AlbumRepositoryTest {
 
     @Test
     fun `getAlbums returns local data if not empty`() = runTest {
-        val localAlbums = listOf(AlbumEntity(1, 1, "Album 1", "url1", "thumb1"))
+        val localAlbums = listOf(exampleAlbum)
         coEvery { mockDao.getAll() } returns localAlbums
 
         val result = repository.getAlbums()
@@ -45,15 +52,7 @@ class AlbumRepositoryTest {
 
     @Test
     fun `getAlbums fetches and saves remote data if local is empty`() = runTest {
-        val remoteAlbumsDto = listOf(
-            AlbumDto(
-                1,
-                1,
-                "Album 1",
-                "url1",
-                "thumb1"
-            )
-        )
+        val remoteAlbumsDto = listOfDtoAlbums
         val remoteAlbums = remoteAlbumsDto.map { it.toEntity() }
 
         coEvery { mockDao.getAll() } returns emptyList()
@@ -72,7 +71,7 @@ class AlbumRepositoryTest {
 
     @Test
     fun `getAlbums returns local data on API error`() = runTest {
-        val fallbackLocalAlbums = listOf(AlbumEntity(1, 1, "Album 1", "url1", "thumb1"))
+        val fallbackLocalAlbums = listOf(exampleAlbum)
 
         coEvery { mockDao.getAll() } returnsMany listOf(emptyList(), fallbackLocalAlbums)
         coEvery { mockApi.getAlbums() } throws RuntimeException("Network error")
@@ -86,15 +85,7 @@ class AlbumRepositoryTest {
 
     @Test
     fun `getAlbumsFromApi fetches and stores remote data`() = runTest {
-        val remoteAlbumsDto = listOf(
-            AlbumDto(
-                2,
-                2,
-                "Album 2",
-                "url2",
-                "thumb2"
-            )
-        )
+        val remoteAlbumsDto = listOfDtoAlbums
         val remoteAlbums = remoteAlbumsDto.map { it.toEntity() }
 
         coEvery { mockApi.getAlbums() } returns remoteAlbumsDto
@@ -121,29 +112,23 @@ class AlbumRepositoryTest {
 
     @Test
     fun `getAlbumById returns album if exists`() = runTest {
-        val albums = listOf(
-            AlbumEntity(1, 1, "Album 1", "url1", "thumb1"),
-            AlbumEntity(2, 2, "Album 2", "url2", "thumb2")
-        )
-        coEvery { mockDao.getAll() } returns albums
+        coEvery { mockDao.getAlbumById(2) } returns example2
 
         val result = repository.getAlbumById(2)
 
-        assertEquals(albums[1], result)
-        coVerify { mockDao.getAll() }
+        assertEquals(example2, result)
+        coVerify { mockDao.getAlbumById(2) }
     }
 
     @Test
     fun `getAlbumById returns null if album doesn't exist`() = runTest {
-        val albums = listOf(AlbumEntity(1, 1, "Album 1", "url1", "thumb1"))
-        coEvery { mockDao.getAll() } returns albums
+        coEvery { mockDao.getAlbumById(99) } returns null
 
         val result = repository.getAlbumById(99)
 
         assertNull(result)
-        coVerify { mockDao.getAll() }
+        coVerify { mockDao.getAlbumById(99) }
     }
-
 
     @Test
     fun `getAlbums returns empty list if local and remote both fail`() = runTest {
@@ -170,27 +155,19 @@ class AlbumRepositoryTest {
 
     @Test
     fun `getAlbumById handles exception from dao gracefully`() = runTest {
-        coEvery { mockDao.getAll() } throws RuntimeException("DAO crashed")
+        coEvery { mockDao.getAlbumById(any()) } throws RuntimeException("DAO crashed")
 
-        val result = runCatching {
-            repository.getAlbumById(1)
+        runCatching {
+            val result = repository.getAlbumById(1)
+            assert(result == null)
         }
 
-        assert(result.isFailure)
-        coVerify { mockDao.getAll() }
+        coVerify { mockDao.getAlbumById(1) }
     }
 
     @Test
     fun `getAlbums only calls insertAll once on success`() = runTest {
-        val remoteAlbumsDto = listOf(
-            AlbumDto(
-                1,
-                1,
-                "Title",
-                "url",
-                "thumb"
-            )
-        )
+        val remoteAlbumsDto = listOfDtoAlbums
         val remoteAlbums = remoteAlbumsDto.map { it.toEntity() }
 
         coEvery { mockDao.getAll() } returns emptyList()
@@ -199,7 +176,6 @@ class AlbumRepositoryTest {
 
         repository.getAlbums()
 
-        // Verifica que só inseriu uma vez mesmo com lista vazia inicial
         coVerify(exactly = 1) { mockDao.insertAll(remoteAlbums) }
     }
 }

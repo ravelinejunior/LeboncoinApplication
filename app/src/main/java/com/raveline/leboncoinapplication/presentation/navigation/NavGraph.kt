@@ -13,15 +13,15 @@ import com.raveline.leboncoinapplication.presentation.splash.SplashScreen
 
 @Composable
 fun AppNavHost(navController: NavHostController) {
-    NavHost(navController, startDestination = "splash") {
-        composable("splash") {
+    NavHost(navController, startDestination = Screen.Splash.route) {
+        composable(Screen.Splash.route) {
             SplashScreen {
-                navController.navigate("albums") {
-                    popUpTo("splash") { inclusive = true }
+                navController.navigate(Screen.Albums.route) {
+                    popUpTo(Screen.Splash.route) { inclusive = true }
                 }
             }
         }
-        composable("albums") {
+        composable(Screen.Albums.route) {
             val viewModel = hiltViewModel<AlbumsViewModel>()
             val state = viewModel.uiState
             AlbumsScreen(
@@ -29,11 +29,11 @@ fun AppNavHost(navController: NavHostController) {
                 isGrid = viewModel.isGrid,
                 onToggleLayout = viewModel::toggleLayout,
                 onAlbumClick = { id ->
-                    navController.navigate("albumDetail/$id")
+                    navController.navigate(Screen.AlbumDetail.createRoute(id))
                 },
             )
         }
-        composable("albumDetail/{albumId}") { backStackEntry ->
+        composable(Screen.AlbumDetail.route) { backStackEntry ->
             val viewModel = hiltViewModel<AlbumDetailViewModel>()
             val state = viewModel.uiState
             val albumId = backStackEntry.arguments?.getString("albumId")?.toIntOrNull()
@@ -44,5 +44,13 @@ fun AppNavHost(navController: NavHostController) {
                 )
             }
         }
+    }
+}
+
+sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
+    object Albums : Screen("albums")
+    object AlbumDetail : Screen("albumDetail/{albumId}") {
+        fun createRoute(albumId: Int) = "albumDetail/$albumId"
     }
 }
