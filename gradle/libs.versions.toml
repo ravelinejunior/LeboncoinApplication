@@ -2,6 +2,8 @@
 accompanistSwiperefresh = "0.35.0-alpha"
 agp = "8.7.2"
 foundation = "1.8.1"
+hiltAndroidTesting = "2.51.1"
+hiltAndroidCompiler = "2.51.1"
 kotlin = "2.1.10"
 coreKtx = "1.16.0"
 junit = "4.13.2"
@@ -17,6 +19,7 @@ lottieCompose = "6.0.0"
 mockitoCore = "5.0.0"
 mockitoInline = "5.0.0"
 mockk = "1.13.5"
+roomTesting = "2.7.1"
 uiTestJunit4 = "1.5.1"
 viewmodel-compose = "2.8.7"
 navigation-compose = "2.8.6"
@@ -29,12 +32,16 @@ hilt-android = "2.51.1"
 hilt-navigation-compose = "1.2.0"
 retrofitVersion = "2.9.0"
 okHttpVersion = "4.12.0"
+rules = "1.5.0"
 
 
 [libraries]
-accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefresh" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "roomTesting" }
+androidx-rules = { module = "androidx.test:rules", version.ref = "rules" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroidCompiler" }
+hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroidTesting" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
