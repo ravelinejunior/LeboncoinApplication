@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AlbumsViewModel @Inject constructor(
+open class AlbumsViewModel @Inject constructor(
     private val getAlbumsUseCase: GetAlbumsUseCase,
     private val savedStateHandle: SavedStateHandle,
     application: Application

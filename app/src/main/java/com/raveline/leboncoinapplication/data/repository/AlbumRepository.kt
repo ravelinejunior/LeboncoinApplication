@@ -6,7 +6,7 @@ import com.raveline.leboncoinapplication.data.mappers.toEntity
 import com.raveline.leboncoinapplication.data.remote.api.AlbumApi
 import javax.inject.Inject
 
-class AlbumRepository @Inject constructor(
+open class AlbumRepository @Inject constructor(
     private val api: AlbumApi,
     private val dao: AlbumDao
 ) {

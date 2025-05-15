@@ -98,9 +98,16 @@ dependencies {
     // Compose UI Test
     androidTestImplementation(libs.ui.test.junit4)
     // Compose UI Test Manifest
-    androidTestImplementation(libs.androidx.junit)
+
+
+    androidTestImplementation (libs.androidx.rules)
+    androidTestImplementation (libs.androidx.junit)
+
+    androidTestImplementation (libs.hilt.android.testing)
+    kspAndroidTest (libs.hilt.android.compiler)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

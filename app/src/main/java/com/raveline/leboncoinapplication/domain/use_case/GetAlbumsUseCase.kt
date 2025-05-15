@@ -4,10 +4,10 @@ import com.raveline.leboncoinapplication.data.local.entity.AlbumEntity
 import com.raveline.leboncoinapplication.data.repository.AlbumRepository
 import javax.inject.Inject
 
-class GetAlbumsUseCase @Inject constructor(
+open class GetAlbumsUseCase @Inject constructor(
     private val repository: AlbumRepository
 ) {
-    suspend operator fun invoke(forceRefresh: Boolean = false): List<AlbumEntity> =
+    open suspend operator fun invoke(forceRefresh: Boolean = false): List<AlbumEntity> =
         if (forceRefresh) repository.getAlbumsFromApi()
         else repository.getAlbums()
 }
