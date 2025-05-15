@@ -175,5 +175,5 @@ expected behaviors.
 ---
 
 <div align="center">
-  Developed with precision and best practices by a Senior Android Engineer.
+  Developed by a Franklin Junior.
 </div>
