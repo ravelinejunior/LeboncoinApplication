@@ -147,8 +147,11 @@ implementations for testing.
     * `AlbumRepositoryTest`: Mocks `AlbumApi` and `AlbumDao` to validate caching logic, error
       handling, and force-refresh behavior.
     * `GetAlbumsUseCaseTest`: Confirms correct orchestration of repository calls.
-    * `AlbumsViewModelTest`: Simulates network availability and refresh behavior.
-    * `AlbumDetailViewModelTest`: Verifies error handling and non-integer albumId handling.
+    * `NetworkMonitorTest`: Simulates connectivity changes and ensures
+      `refreshAlbums(forceRefresh = true)` is triggered.
+    * `AlbumsViewModelTest`: Creates the ViewModel and ensures `AlbumsUiState` updates correctly.
+    * `AlbumDetailViewModelTest`: Generates the ViewModel and verify data retrieval from the
+      selection navigation.
 
 * **Instrumented Tests**:
 
@@ -156,6 +159,30 @@ implementations for testing.
 
 **Reasoning**: A comprehensive test suite ensures reliability, prevents regressions, and documents
 expected behaviors.
+
+---
+
+## Running the Application
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/ravelinejunior/LeboncoinApplication.git
+   cd leboncoin-android-test
+   ```
+2. **Open in Android Studio** (Arctic Fox or later).
+3. **Configure an Android 7.0+ emulator or device (API 24+).**
+4. **Build and Run**:
+
+   ```bash
+   ./gradlew installDebug
+   ```
+5. **Execute Tests**:
+
+   ```bash
+   ./gradlew test                # Unit tests
+   ./gradlew connectedAndroidTest # Instrumented/UI tests
+   ```
 
 ---
 
