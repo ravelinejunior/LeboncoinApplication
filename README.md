@@ -155,7 +155,7 @@ implementations for testing.
 
 * **Instrumented Tests**:
 
-    * End-to-end scenarios with fake image loader and Hilt test components.
+    * This instrumented test verifies the behavior of AlbumRepository when interacting with a Room database and a mock API, covering scenarios such as local data, API failures, and database updates.
 
 **Reasoning**: A comprehensive test suite ensures reliability, prevents regressions, and documents
 expected behaviors.
